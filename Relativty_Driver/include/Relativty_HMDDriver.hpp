@@ -5,7 +5,7 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -13,21 +13,25 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#pragma once
-#include <thread>
+#ifndef RELATIVTY_HMD_DRIVER_H
+#define RELATIVTY_HMD_DRIVER_H
+
 #include <atomic>
+#include <thread>
+#ifdef WIN32
 #include <WinSock2.h>
-#include "hidapi/hidapi.h"
-#include "openvr_driver.h"
-#include "Relativty_components.h"
+#else
+#include <unistd.h>
+#endif
 #include "Relativty_base_device.h"
+#include "Relativty_components.h"
+#include <hidapi/hidapi.h>
+#include <openvr_driver.h>
 
 namespace Relativty {
-	class HMDDriver : public RelativtyDevice<false>
-	{
+	class HMDDriver : public RelativtyDevice<false> {
 	public:
-		HMDDriver(std::string myserial);
-		~HMDDriver() = default;
+		HMDDriver(const std::string myserial);
 
 		void frameUpdate();
 		inline void setProperties();
@@ -41,6 +45,7 @@ namespace Relativty {
 		int32_t m_iVid;
 
 		bool m_bIMUpktIsDMP;
+		size_t m_hidBuffLength;
 
 		float SecondsFromVsyncToPhotons;
 		float DisplayFrequency;
@@ -48,11 +53,11 @@ namespace Relativty {
 		float HeadToEyeDepth;
 
 		vr::DriverPose_t lastPose = {0};
-		hid_device* handle;
+		hid_device *handle;
 
 		std::atomic<float> quat[4];
 		std::atomic<bool> retrieve_quaternion_isOn = false;
-		std::atomic<bool> new_quaternion_avaiable = false;
+		std::atomic<bool> new_quaternion_available = false;
 
 		std::atomic<float> qconj[4] = {1, 0, 0, 0};
 		void calibrate_quaternion();
@@ -62,9 +67,9 @@ namespace Relativty {
 
 		std::atomic<float> vector_xyz[3];
 		std::atomic<bool> retrieve_vector_isOn = false;
-		std::atomic<bool> new_vector_avaiable = false;
+		std::atomic<bool> new_vector_available = false;
 		bool start_tracking_server = false;
-		SOCKET sock, sock_receive;
+		int sock, sock_receive;
 		float upperBound;
 		float lowerBound;
 
@@ -93,5 +98,12 @@ namespace Relativty {
 
 		std::string PyPath;
 		std::thread startPythonTrackingClient_worker;
+#ifndef WIN32
+		void closesocket(int fd) {
+			close(fd);
+		}
+#endif
 	};
-}
+} // namespace Relativty
+
+#endif // RELATIVTY_HMD_DRIVER_H

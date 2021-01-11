@@ -17,3 +17,6 @@ Relativty_Driver/DriverLog/Release*
 Debug
 DebugWin32
 Debugx64
+Relativty_Driver/build
+Relativty_Driver/CMakeFiles
+CMakeCache.txt

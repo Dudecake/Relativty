@@ -1,7 +1,22 @@
-#pragma once
+// Copyright (C) 2020  Max Coutte, Gabriel Combe
+// Copyright (C) 2020  Relativty.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #ifndef RELATIVTY_COMPONENTS_H
 #define RELATIVTY_COMPONENTS_H
+
+#include <cmath>
 
 namespace Relativty {
   static const char *const k_pch_ExtDisplay_Section = "Relativty_extendedDisplay";
@@ -55,7 +70,7 @@ namespace Relativty {
       m_fZoomHeight = vr::VRSettings()->GetFloat(k_pch_ExtDisplay_Section,
                                                  k_pch_ExtDisplay_ZoomHeight_Float);
 
-      m_iEyeGapOff = vr::VRSettings()->GetFloat(k_pch_ExtDisplay_Section,
+      m_iEyeGapOff = vr::VRSettings()->GetInt32(k_pch_ExtDisplay_Section,
                                                  k_pch_ExtDisplay_EyeGapOffset_Int);
 
       m_bIsDisplayReal = vr::VRSettings()->GetBool(k_pch_ExtDisplay_Section,

@@ -5,7 +5,7 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -13,7 +13,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#pragma once
-#pragma warning(disable:4996)
+#ifdef WIN32
+#pragma warning(disable : 4996)
+#endif
+
+#ifndef RELATIVTY_EMBEDDED_PYTHON_H
+#define RELATIVTY_EMBEDDED_PYTHON_H
+
+
+#include <string>
 
 void startPythonTrackingClient_threaded(std::string PyPath);
+
+#endif // RELATIVTY_EMBEDDED_PYTHON_H
