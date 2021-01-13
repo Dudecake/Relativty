@@ -71,4 +71,4 @@ if (OPENVR_LIBRARY_TMP AND OPENVR_INCLUDE_DIR)
 endif()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(OpenVRSDK REQUIRED_VARS OPENVR_LIBRARY OPENVR_INCLUDE_DIR)
+find_package_handle_standard_args(OpenVR REQUIRED_VARS OPENVR_LIBRARY OPENVR_INCLUDE_DIR)

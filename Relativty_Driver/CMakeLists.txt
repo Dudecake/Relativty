@@ -13,21 +13,22 @@ find_package(OpenVR REQUIRED)
 find_package(Python3 COMPONENTS Development REQUIRED)
 
 set(HEADERS "include/Relativty_base_device.h" "include/Relativty_components.h" "include/Relativty_EmbeddedPython.h" "include/Relativty_HMDDriver.hpp" "include/Relativty_ServerDriver.hpp")
-set(SOURCES "source/DriverFactory.cpp" "source/Relativty_EmbeddedPython.cpp" "source/Relativty_HMDDriver.cpp" "source/Relativty_ServerDriver.cpp")
+set(SOURCES "source/DriverFactory.cpp" "source/driverlog.cpp" "source/Relativty_EmbeddedPython.cpp" "source/Relativty_HMDDriver.cpp" "source/Relativty_ServerDriver.cpp")
 
 source_group(headers FILES ${HEADERS})
 source_group(sources FILES ${SOURCES})
 
 if(${WIN32})
   add_definitions("-DRELATIVTY_EXPORT=__declspec(dllexport)")
+  set(PLATFORM_LIBS Ws2_32 Setupapi User32)
 else()
-add_definitions("-DRELATIVTY_EXPORT=")
+  add_definitions("-DRELATIVTY_EXPORT=")
 endif()
 
 add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES})
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
-target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${OPENVR_INCLUDE_DIR}")
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${HIDAPI_INCLUDE_DIR}" "${OPENVR_INCLUDE_DIR}")
 
 if(${USE_CLANG_TIDY})
   find_program(CLANG_TIDY_EXE NAMES "clang-tidy" DOC "Path to clang-tidy executable")
@@ -40,4 +41,4 @@ if(${USE_CLANG_TIDY})
   endif()
 endif()
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${HIDAPI_LIBRARY} ${OPENVR_LIBRARY} Python3::Python)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${HIDAPI_LIBRARY} ${OPENVR_LIBRARY} Python3::Python ${PLATFORM_LIBS})

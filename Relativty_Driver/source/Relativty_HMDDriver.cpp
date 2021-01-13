@@ -13,24 +13,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifdef WIN32
-#pragma comment(lib, "Ws2_32.lib")
-#pragma comment(lib, "Setupapi.lib")
-#pragma comment(lib, "User32.lib")
-#endif
-
 #include <atomic>
 #include <cstring>
 #ifdef WIN32
 #include <WinSock2.h>
 #include <Windows.h>
+#include <ws2tcpip.h>
 #else
 #include <netinet/in.h>
 #include <sys/socket.h>
 #define INVALID_SOCKET -1
 #define SOCKET_ERROR -1
 #endif
-#include <hidapi/hidapi.h>
+#include <hidapi.h>
 #include <openvr_driver.h>
 
 #include "driverlog.h"
@@ -169,7 +164,7 @@ void Relativty::HMDDriver::calibrate_quaternion() {
 }
 
 void Relativty::HMDDriver::retrieve_device_quaternion_packet_threaded() {
-	uint8_t packet_buffer[this->m_hidBuffLength];
+	uint8_t packet_buffer[64];
 	int16_t quaternion_packet[4];
 	//this struct is for mpu9250 support
 #pragma pack(push, 1)

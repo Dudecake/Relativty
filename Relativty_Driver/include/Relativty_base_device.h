@@ -20,7 +20,11 @@
 
 #include "Relativty_components.h"
 
+#ifdef _MSC_VER
+#define strcasecmp(s1, s2) _stricmp(s1, s2)
+#else
 #include <strings.h>
+#endif
 
 namespace Relativty {
   static const char *const k_pch_Driver_Section = "driver_Relativty";

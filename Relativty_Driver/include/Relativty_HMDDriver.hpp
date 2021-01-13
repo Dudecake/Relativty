@@ -18,15 +18,17 @@
 
 #include <atomic>
 #include <thread>
-#ifdef WIN32
-#include <WinSock2.h>
-#else
-#include <unistd.h>
-#endif
 #include "Relativty_base_device.h"
 #include "Relativty_components.h"
 #include <hidapi/hidapi.h>
 #include <openvr_driver.h>
+
+#ifdef WIN32
+#include <WinSock2.h>
+#else
+#include <unistd.h>
+using SOCKET = int;
+#endif
 
 namespace Relativty {
 	class HMDDriver : public RelativtyDevice<false> {
@@ -69,7 +71,7 @@ namespace Relativty {
 		std::atomic<bool> retrieve_vector_isOn = false;
 		std::atomic<bool> new_vector_available = false;
 		bool start_tracking_server = false;
-		int sock, sock_receive;
+		SOCKET sock, sock_receive;
 		float upperBound;
 		float lowerBound;
 

@@ -20,7 +20,6 @@
 #ifndef RELATIVTY_EMBEDDED_PYTHON_H
 #define RELATIVTY_EMBEDDED_PYTHON_H
 
-
 #include <string>
 
 void startPythonTrackingClient_threaded(std::string PyPath);
