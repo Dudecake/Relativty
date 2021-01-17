@@ -20,9 +20,7 @@
 
 #include "Relativty_components.h"
 
-#ifdef _MSC_VER
-#define strcasecmp(s1, s2) _stricmp(s1, s2)
-#else
+#ifndef _MSC_VER
 #include <strings.h>
 #endif
 
@@ -142,6 +140,9 @@ namespace Relativty {
     virtual vr::DriverPose_t GetPose() { return m_Pose; }
 
     void *GetComponent(const char *pchComponentNameAndVersion) {
+#ifdef _MSC_VER
+      auto strcasecmp = _stricmp;
+#endif
       // don't touch this
       DriverLog("device serial \"%s\", got request for \"%s\" component\n", m_sSerialNumber.c_str(), pchComponentNameAndVersion);
       if (!strcasecmp(pchComponentNameAndVersion, vr::IVRDisplayComponent_Version) && m_spExtDisplayComp != nullptr) {

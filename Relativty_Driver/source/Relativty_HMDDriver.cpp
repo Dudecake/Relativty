@@ -48,9 +48,7 @@ vr::EVRInitError Relativty::HMDDriver::Activate(uint32_t unObjectId) {
 	RelativtyDevice::Activate(unObjectId);
 	this->setProperties();
 
-	int result;
-	result = hid_init(); //Result should be 0.
-	if (result) {
+	if (int result = hid_init(); result) {
 		Relativty::ServerDriver::Log("USB: HID API initialization failed. \n");
 		return vr::VRInitError_Driver_TrackedDeviceInterfaceUnknown;
 	}
@@ -106,33 +104,21 @@ void Relativty::HMDDriver::update_pose_threaded() {
 	Relativty::ServerDriver::Log("Thread2: successfully started\n");
 	while (m_unObjectId != vr::k_unTrackedDeviceIndexInvalid) {
 		if (this->new_quaternion_available && this->new_vector_available) {
-			m_Pose.qRotation.w = this->quat[0];
-			m_Pose.qRotation.x = this->quat[1];
-			m_Pose.qRotation.y = this->quat[2];
-			m_Pose.qRotation.z = this->quat[3];
-
-			m_Pose.vecPosition[0] = this->vector_xyz[0];
-			m_Pose.vecPosition[1] = this->vector_xyz[1];
-			m_Pose.vecPosition[2] = this->vector_xyz[2];
+			memcpy(&m_Pose.qRotation, this->quat, sizeof(m_Pose.qRotation));
+			memcpy(m_Pose.vecPosition, this->vector_xyz, sizeof(m_Pose.vecPosition));
 
 			vr::VRServerDriverHost()->TrackedDevicePoseUpdated(m_unObjectId, m_Pose, sizeof(vr::DriverPose_t));
 			this->new_quaternion_available = false;
 			this->new_vector_available = false;
 		}
 		else if (this->new_quaternion_available) {
-			m_Pose.qRotation.w = this->quat[0];
-			m_Pose.qRotation.x = this->quat[1];
-			m_Pose.qRotation.y = this->quat[2];
-			m_Pose.qRotation.z = this->quat[3];
+			memcpy(&m_Pose.qRotation, this->quat, sizeof(m_Pose.qRotation));
 
 			vr::VRServerDriverHost()->TrackedDevicePoseUpdated(m_unObjectId, m_Pose, sizeof(vr::DriverPose_t));
 			this->new_quaternion_available = false;
 		}
 		else if (this->new_vector_available) {
-
-			m_Pose.vecPosition[0] = this->vector_xyz[0];
-			m_Pose.vecPosition[1] = this->vector_xyz[1];
-			m_Pose.vecPosition[2] = this->vector_xyz[2];
+			memcpy(m_Pose.vecPosition, this->vector_xyz, sizeof(m_Pose.vecPosition));
 
 			vr::VRServerDriverHost()->TrackedDevicePoseUpdated(m_unObjectId, m_Pose, sizeof(vr::DriverPose_t));
 			this->new_vector_available = false;
@@ -157,10 +143,7 @@ void Relativty::HMDDriver::calibrate_quaternion() {
 	qres[2] = qconj[0] * quat[2] - qconj[1] * quat[3] + qconj[2] * quat[0] + qconj[3] * quat[1];
 	qres[3] = qconj[0] * quat[3] + qconj[1] * quat[2] - qconj[2] * quat[1] + qconj[3] * quat[0];
 
-	this->quat[0] = qres[0];
-	this->quat[1] = qres[1];
-	this->quat[2] = qres[2];
-	this->quat[3] = qres[3];
+	memcpy(this->quat, qres, sizeof(this->quat));
 }
 
 void Relativty::HMDDriver::retrieve_device_quaternion_packet_threaded() {
@@ -194,27 +177,16 @@ void Relativty::HMDDriver::retrieve_device_quaternion_packet_threaded() {
 				qres[2] = -1 * quat[2];
 				qres[3] = -1 * quat[3];
 
-				this->quat[0] = qres[0];
-				this->quat[1] = qres[1];
-				this->quat[2] = qres[2];
-				this->quat[3] = qres[3];
-
-				this->calibrate_quaternion();
-
-				this->new_quaternion_available = true;
+				memcpy(this->quat, qres, sizeof(this->quat));
 			}
 			else {
 
 				pak *recv = (pak *)packet_buffer;
-				this->quat[0] = recv->quat[0];
-				this->quat[1] = recv->quat[1];
-				this->quat[2] = recv->quat[2];
-				this->quat[3] = recv->quat[3];
-
-				this->calibrate_quaternion();
-
-				this->new_quaternion_available = true;
+				memcpy(this->quat, reinterpret_cast<pak*>(packet_buffer)->quat, sizeof(this->quat));
 			}
+			this->calibrate_quaternion();
+
+			this->new_quaternion_available = true;
 		}
 		else {
 			Relativty::ServerDriver::Log("Thread1: Issue while trying to read USB\n");

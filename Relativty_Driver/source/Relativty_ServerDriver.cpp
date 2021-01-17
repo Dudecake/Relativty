@@ -49,7 +49,7 @@ void Relativty::ServerDriver::Cleanup() {
 	CleanupDriverLog();
 #endif
 
-	VR_CLEANUP_SERVER_DRIVER_CONTEXT();
+	vr::CleanupDriverContext();
 }
 
 const char *const *Relativty::ServerDriver::GetInterfaceVersions() {
