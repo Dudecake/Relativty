@@ -20,7 +20,7 @@
 #include <thread>
 #include "Relativty_base_device.h"
 #include "Relativty_components.h"
-#include <hidapi/hidapi.h>
+#include <hidapi.h>
 #include <openvr_driver.h>
 
 #ifdef WIN32

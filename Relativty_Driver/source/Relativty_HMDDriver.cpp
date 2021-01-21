@@ -104,21 +104,21 @@ void Relativty::HMDDriver::update_pose_threaded() {
 	Relativty::ServerDriver::Log("Thread2: successfully started\n");
 	while (m_unObjectId != vr::k_unTrackedDeviceIndexInvalid) {
 		if (this->new_quaternion_available && this->new_vector_available) {
-			memcpy(&m_Pose.qRotation, this->quat, sizeof(m_Pose.qRotation));
-			memcpy(m_Pose.vecPosition, this->vector_xyz, sizeof(m_Pose.vecPosition));
+			std::copy(std::begin(this->quat), std::end(this->quat), reinterpret_cast<float*>(&m_Pose.qRotation));
+			std::copy(std::begin(this->vector_xyz), std::end(this->vector_xyz), m_Pose.vecPosition);
 
 			vr::VRServerDriverHost()->TrackedDevicePoseUpdated(m_unObjectId, m_Pose, sizeof(vr::DriverPose_t));
 			this->new_quaternion_available = false;
 			this->new_vector_available = false;
 		}
 		else if (this->new_quaternion_available) {
-			memcpy(&m_Pose.qRotation, this->quat, sizeof(m_Pose.qRotation));
+			std::copy(std::begin(this->quat), std::end(this->quat), reinterpret_cast<float*>(&m_Pose.qRotation));
 
 			vr::VRServerDriverHost()->TrackedDevicePoseUpdated(m_unObjectId, m_Pose, sizeof(vr::DriverPose_t));
 			this->new_quaternion_available = false;
 		}
 		else if (this->new_vector_available) {
-			memcpy(m_Pose.vecPosition, this->vector_xyz, sizeof(m_Pose.vecPosition));
+			std::copy(std::begin(this->vector_xyz), std::end(this->vector_xyz), std::begin(m_Pose.vecPosition));
 
 			vr::VRServerDriverHost()->TrackedDevicePoseUpdated(m_unObjectId, m_Pose, sizeof(vr::DriverPose_t));
 			this->new_vector_available = false;
@@ -143,7 +143,7 @@ void Relativty::HMDDriver::calibrate_quaternion() {
 	qres[2] = qconj[0] * quat[2] - qconj[1] * quat[3] + qconj[2] * quat[0] + qconj[3] * quat[1];
 	qres[3] = qconj[0] * quat[3] + qconj[1] * quat[2] - qconj[2] * quat[1] + qconj[3] * quat[0];
 
-	memcpy(this->quat, qres, sizeof(this->quat));
+	std::copy(std::begin(qres), std::end(qres), this->quat);
 }
 
 void Relativty::HMDDriver::retrieve_device_quaternion_packet_threaded() {
@@ -177,12 +177,11 @@ void Relativty::HMDDriver::retrieve_device_quaternion_packet_threaded() {
 				qres[2] = -1 * quat[2];
 				qres[3] = -1 * quat[3];
 
-				memcpy(this->quat, qres, sizeof(this->quat));
+				std::copy(std::begin(qres), std::end(qres), this->quat);
 			}
 			else {
-
 				pak *recv = (pak *)packet_buffer;
-				memcpy(this->quat, reinterpret_cast<pak*>(packet_buffer)->quat, sizeof(this->quat));
+				std::copy(std::begin(recv->quat), std::end(recv->quat), this->quat);
 			}
 			this->calibrate_quaternion();
 

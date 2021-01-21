@@ -21,7 +21,7 @@
 #include "Relativty_ServerDriver.hpp"
 
 vr::EVRInitError Relativty::ServerDriver::Init(vr::IVRDriverContext *DriverContext) {
-	if (vr::EVRInitError eError = vr::InitServerDriverContext(DriverContext);eError != vr::VRInitError_None) {
+	if (vr::EVRInitError eError = vr::InitServerDriverContext(DriverContext); eError != vr::VRInitError_None) {
 		return eError;
 	}
 #ifdef DRIVERLOG_H
