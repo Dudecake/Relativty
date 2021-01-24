@@ -40,7 +40,7 @@
 #include <string>
 
 inline void Normalize(std::array<float, 3> &norma, const std::array<float, 3> &v, const std::array<float, 3> &max, const std::array<float, 3> &min, const int &up, const int &down, const std::array<float, 3> &scale, const std::array<float, 3> offset) {
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 3; i++) {
 		norma[i] = (((up - down) * ((v[i] - min[i]) / (max[i] - min[i])) + down) / scale[i]) + offset[i];
 	}
 }
