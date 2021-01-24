@@ -17,7 +17,9 @@
 #define RELATIVTY_HMD_DRIVER_H
 
 #include <atomic>
+#include <array>
 #include <thread>
+#include <shared_mutex>
 #include "Relativty_base_device.h"
 #include "Relativty_components.h"
 #include <hidapi.h>
@@ -57,17 +59,20 @@ namespace Relativty {
 		vr::DriverPose_t lastPose = {0};
 		hid_device *handle;
 
-		std::atomic<float> quat[4];
+
+    	std::shared_timed_mutex quatMutex;
+		std::array<float, 4> quat = { 0.0F, 0.0F, 0.0F, 0.0F };
 		std::atomic<bool> retrieve_quaternion_isOn = false;
 		std::atomic<bool> new_quaternion_available = false;
 
-		float qconj[4] = {1, 0, 0, 0};
+		std::array<float, 4> qconj = { 1.0F, 0.0F, 0.0F, 0.0F };
 		void calibrate_quaternion();
 
 		std::thread retrieve_quaternion_thread_worker;
 		void retrieve_device_quaternion_packet_threaded();
 
-		std::atomic<float> vector_xyz[3];
+    	std::shared_timed_mutex vectorMutex;
+		std::array<float, 3> vector_xyz = { 0.0F, 0.0F, 0.0F };
 		std::atomic<bool> retrieve_vector_isOn = false;
 		std::atomic<bool> new_vector_available = false;
 		bool start_tracking_server = false;

@@ -39,7 +39,7 @@
 
 #include <string>
 
-inline void Normalize(float norma[3], float v[3], float max[3], float min[3], const int &up, const int &down, float scale[3], float offset[3]) {
+inline void Normalize(std::array<float, 3> &norma, const std::array<float, 3> &v, const std::array<float, 3> &max, const std::array<float, 3> &min, const int &up, const int &down, const std::array<float, 3> &scale, const std::array<float, 3> offset) {
 	for (int i = 0; i < 4; i++) {
 		norma[i] = (((up - down) * ((v[i] - min[i]) / (max[i] - min[i])) + down) / scale[i]) + offset[i];
 	}
@@ -105,21 +105,25 @@ void Relativty::HMDDriver::update_pose_threaded() {
 	Relativty::ServerDriver::Log("Thread2: successfully started\n");
 	while (m_unObjectId != vr::k_unTrackedDeviceIndexInvalid) {
 		if (this->new_quaternion_available && this->new_vector_available) {
-			std::copy(std::begin(this->quat), std::end(this->quat), reinterpret_cast<float*>(&m_Pose.qRotation));
-			std::copy(std::begin(this->vector_xyz), std::end(this->vector_xyz), m_Pose.vecPosition);
+        	std::shared_lock quatLock(quatMutex);
+			std::shared_lock vectorLock(vectorMutex);
+			std::copy(this->quat.begin(), this->quat.end(), reinterpret_cast<float*>(&m_Pose.qRotation));
+			std::copy(this->vector_xyz.begin(), this->vector_xyz.end(), m_Pose.vecPosition);
 
 			vr::VRServerDriverHost()->TrackedDevicePoseUpdated(m_unObjectId, m_Pose, sizeof(vr::DriverPose_t));
 			this->new_quaternion_available = false;
 			this->new_vector_available = false;
 		}
 		else if (this->new_quaternion_available) {
-			std::copy(std::begin(this->quat), std::end(this->quat), reinterpret_cast<float*>(&m_Pose.qRotation));
+        	std::shared_lock quatLock(quatMutex);
+			std::copy(this->quat.begin(), this->quat.end(), reinterpret_cast<float*>(&m_Pose.qRotation));
 
 			vr::VRServerDriverHost()->TrackedDevicePoseUpdated(m_unObjectId, m_Pose, sizeof(vr::DriverPose_t));
 			this->new_quaternion_available = false;
 		}
 		else if (this->new_vector_available) {
-			std::copy(std::begin(this->vector_xyz), std::end(this->vector_xyz), std::begin(m_Pose.vecPosition));
+			std::shared_lock vectorLock(vectorMutex);
+			std::copy(this->vector_xyz.begin(), this->vector_xyz.end(), std::begin(m_Pose.vecPosition));
 
 			vr::VRServerDriverHost()->TrackedDevicePoseUpdated(m_unObjectId, m_Pose, sizeof(vr::DriverPose_t));
 			this->new_vector_available = false;
@@ -129,56 +133,52 @@ void Relativty::HMDDriver::update_pose_threaded() {
 }
 
 void Relativty::HMDDriver::calibrate_quaternion() {
+	std::lock_guard writeLock(quatMutex);
 #ifdef WIN32
 	if ((0x01 & GetAsyncKeyState(0x52)) != 0) {
-		qconj[0].store(quat[0]);
-		qconj[1].store(-1 * quat[1]);
-		qconj[2].store(-1 * quat[2]);
-		qconj[3].store(-1 * quat[3]);
+		qconj[0] = (this->quat[0]);
+		qconj[1] = (-1 * this->quat[1]);
+		qconj[2] = (-1 * this->quat[2]);
+		qconj[3] = (-1 * this->quat[3]);
 	}
 #endif
-	float qres[4];
-
-	qres[0] = qconj[0] * quat[0] - qconj[1] * quat[1] - qconj[2] * quat[2] - qconj[3] * quat[3];
-	qres[1] = qconj[0] * quat[1] + qconj[1] * quat[0] + qconj[2] * quat[3] - qconj[3] * quat[2];
-	qres[2] = qconj[0] * quat[2] - qconj[1] * quat[3] + qconj[2] * quat[0] + qconj[3] * quat[1];
-	qres[3] = qconj[0] * quat[3] + qconj[1] * quat[2] - qconj[2] * quat[1] + qconj[3] * quat[0];
-
-	std::copy(std::begin(qres), std::end(qres), this->quat);
+	this->quat[0] = qconj[0] * this->quat[0] - qconj[1] * this->quat[1] - qconj[2] * this->quat[2] - qconj[3] * this->quat[3];
+	this->quat[1] = qconj[0] * this->quat[1] + qconj[1] * this->quat[0] + qconj[2] * this->quat[3] - qconj[3] * this->quat[2];
+	this->quat[2] = qconj[0] * this->quat[2] - qconj[1] * this->quat[3] + qconj[2] * this->quat[0] + qconj[3] * this->quat[1];
+	this->quat[3] = qconj[0] * this->quat[3] + qconj[1] * this->quat[2] - qconj[2] * this->quat[1] + qconj[3] * this->quat[0];
 }
 
 void Relativty::HMDDriver::retrieve_device_quaternion_packet_threaded() {
-	uint8_t packet_buffer[64];
-	int16_t quaternion_packet[4];
+	std::array<uint8_t, 64> packet_buffer;
+	std::array<int16_t, 4> quaternion_packet;
 	//this struct is for mpu9250 support
 #pragma pack(push, 1)
 	struct pak {
 		uint8_t id;
-		float quat[4];
+		std::array<float, 4> quat;
 	};
 #pragma pack(pop)
 	Relativty::ServerDriver::Log("Thread1: successfully started\n");
 	while (this->retrieve_quaternion_isOn) {
-		int result = hid_read(this->handle, packet_buffer, this->m_hidBuffLength); //Result should be greater than 0.
+		int result = hid_read(this->handle, packet_buffer.data(), this->m_hidBuffLength); //Result should be greater than 0.
 		if (result > 0) {
 			if (m_bIMUpktIsDMP) {
 				quaternion_packet[0] = ((packet_buffer[1] << 8) | packet_buffer[2]);
 				quaternion_packet[1] = ((packet_buffer[5] << 8) | packet_buffer[6]);
 				quaternion_packet[2] = ((packet_buffer[9] << 8) | packet_buffer[10]);
 				quaternion_packet[3] = ((packet_buffer[13] << 8) | packet_buffer[14]);
-				std::transform(std::begin(quaternion_packet), std::end(quaternion_packet), std::begin(this->quat), [](const int16_t &item) {return static_cast<float>(item) / 16384.0F;});
+				std::lock_guard writeLock(quatMutex);
+				std::transform(std::begin(quaternion_packet), std::end(quaternion_packet), this->quat.begin(), [](const int16_t &item) {return static_cast<float>(item) / 16384.0F;});
 
-				float qres[4];
-				qres[0] = quat[0];
-				qres[1] = quat[1];
-				qres[2] = -1 * quat[2];
-				qres[3] = -1 * quat[3];
-
-				std::copy(std::begin(qres), std::end(qres), this->quat);
+				this->quat[0] = quat[0];
+				this->quat[1] = quat[1];
+				this->quat[2] = -1 * quat[2];
+				this->quat[3] = -1 * quat[3];
 			}
 			else {
-				pak *recv = reinterpret_cast<pak *>(packet_buffer);
-				std::copy(std::begin(recv->quat), std::end(recv->quat), this->quat);
+				pak *recv = reinterpret_cast<pak *>(packet_buffer.data());
+				std::lock_guard writeLock(quatMutex);
+				std::copy(recv->quat.begin(), recv->quat.end(), this->quat.begin());
 			}
 			this->calibrate_quaternion();
 
@@ -198,13 +198,13 @@ void Relativty::HMDDriver::retrieve_client_vector_packet_threaded() {
 	char receiveBuffer[12];
 	int resultReceiveLen;
 
-	float normalize_min[3]{this->normalizeMinX, this->normalizeMinY, this->normalizeMinZ};
-	float normalize_max[3]{this->normalizeMaxX, this->normalizeMaxY, this->normalizeMaxZ};
-	float scales_coordinate_meter[3]{this->scalesCoordinateMeterX, this->scalesCoordinateMeterY, this->scalesCoordinateMeterZ};
-	float offset_coordinate[3] = {this->offsetCoordinateX, this->offsetCoordinateY, this->offsetCoordinateZ};
+	std::array<float, 3> normalize_min = {this->normalizeMinX, this->normalizeMinY, this->normalizeMinZ};
+	std::array<float, 3> normalize_max = {this->normalizeMaxX, this->normalizeMaxY, this->normalizeMaxZ};
+	std::array<float, 3> scales_coordinate_meter = {this->scalesCoordinateMeterX, this->scalesCoordinateMeterY, this->scalesCoordinateMeterZ};
+	std::array<float, 3> offset_coordinate = {this->offsetCoordinateX, this->offsetCoordinateY, this->offsetCoordinateZ};
 
-	float coordinate[3]{0, 0, 0};
-	float coordinate_normalized[3];
+	std::array<float, 3> coordinate = {0, 0, 0};
+	std::array<float, 3> coordinate_normalized;
 
 	Relativty::ServerDriver::Log("Thread3: Initialising Socket.\n");
 #ifdef WIN32
