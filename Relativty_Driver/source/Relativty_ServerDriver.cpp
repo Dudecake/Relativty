@@ -32,7 +32,7 @@ vr::EVRInitError Relativty::ServerDriver::Init(vr::IVRDriverContext *DriverConte
 	DriverLog("Thread3: receive positional data from python loop");
 #endif
 
-	this->Log("Relativty Init successful.\n");
+	Relativty::ServerDriver::Log("Relativty Init successful.\n");
 
 	this->m_HMDDriver = new Relativty::HMDDriver("zero");
 	vr::VRServerDriverHost()->TrackedDeviceAdded(this->m_HMDDriver->GetSerialNumber().c_str(), vr::ETrackedDeviceClass::TrackedDeviceClass_HMD, this->m_HMDDriver);

@@ -14,6 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <atomic>
+#include <algorithm>
 #include <cstring>
 #ifdef WIN32
 #include <WinSock2.h>
@@ -22,8 +23,8 @@
 #else
 #include <netinet/in.h>
 #include <sys/socket.h>
-#define INVALID_SOCKET -1
-#define SOCKET_ERROR -1
+#define INVALID_SOCKET (-1)
+#define SOCKET_ERROR (-1)
 #endif
 #include <hidapi.h>
 #include <openvr_driver.h>
@@ -156,20 +157,16 @@ void Relativty::HMDDriver::retrieve_device_quaternion_packet_threaded() {
 		float quat[4];
 	};
 #pragma pack(pop)
-	int result;
 	Relativty::ServerDriver::Log("Thread1: successfully started\n");
 	while (this->retrieve_quaternion_isOn) {
-		result = hid_read(this->handle, packet_buffer, this->m_hidBuffLength); //Result should be greater than 0.
+		int result = hid_read(this->handle, packet_buffer, this->m_hidBuffLength); //Result should be greater than 0.
 		if (result > 0) {
 			if (m_bIMUpktIsDMP) {
 				quaternion_packet[0] = ((packet_buffer[1] << 8) | packet_buffer[2]);
 				quaternion_packet[1] = ((packet_buffer[5] << 8) | packet_buffer[6]);
 				quaternion_packet[2] = ((packet_buffer[9] << 8) | packet_buffer[10]);
 				quaternion_packet[3] = ((packet_buffer[13] << 8) | packet_buffer[14]);
-				this->quat[0] = static_cast<float>(quaternion_packet[0]) / 16384.0f;
-				this->quat[1] = static_cast<float>(quaternion_packet[1]) / 16384.0f;
-				this->quat[2] = static_cast<float>(quaternion_packet[2]) / 16384.0f;
-				this->quat[3] = static_cast<float>(quaternion_packet[3]) / 16384.0f;
+				std::transform(std::begin(quaternion_packet), std::end(quaternion_packet), std::begin(this->quat), [](const int16_t &item) {return static_cast<float>(item) / 16384.0F;});
 
 				float qres[4];
 				qres[0] = quat[0];
@@ -180,7 +177,7 @@ void Relativty::HMDDriver::retrieve_device_quaternion_packet_threaded() {
 				std::copy(std::begin(qres), std::end(qres), this->quat);
 			}
 			else {
-				pak *recv = (pak *)packet_buffer;
+				pak *recv = reinterpret_cast<pak *>(packet_buffer);
 				std::copy(std::begin(recv->quat), std::end(recv->quat), this->quat);
 			}
 			this->calibrate_quaternion();
@@ -267,7 +264,7 @@ void Relativty::HMDDriver::retrieve_client_vector_packet_threaded() {
 	Relativty::ServerDriver::Log("Thread3: successfully stopped\n");
 }
 
-Relativty::HMDDriver::HMDDriver(const std::string myserial) : RelativtyDevice(myserial, "akira_") {
+Relativty::HMDDriver::HMDDriver(const std::string &myserial) : RelativtyDevice(myserial, "akira_") {
 	// keys for use with the settings API
 	static const char* const Relativty_hmd_section = "Relativty_hmd";
 
@@ -315,7 +312,7 @@ Relativty::HMDDriver::HMDDriver(const std::string myserial) : RelativtyDevice(my
 
 inline void Relativty::HMDDriver::setProperties() {
 	vr::VRProperties()->SetFloatProperty(m_ulPropertyContainer, vr::Prop_UserIpdMeters_Float, this->IPD);
-	vr::VRProperties()->SetFloatProperty(m_ulPropertyContainer, vr::Prop_UserHeadToEyeDepthMeters_Float, 0.16f);
+	vr::VRProperties()->SetFloatProperty(m_ulPropertyContainer, vr::Prop_UserHeadToEyeDepthMeters_Float, 0.16F);
 	vr::VRProperties()->SetFloatProperty(m_ulPropertyContainer, vr::Prop_DisplayFrequency_Float, this->DisplayFrequency);
 	vr::VRProperties()->SetFloatProperty(m_ulPropertyContainer, vr::Prop_SecondsFromVsyncToPhotons_Float, this->SecondsFromVsyncToPhotons);
 

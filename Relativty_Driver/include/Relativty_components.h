@@ -146,19 +146,19 @@ namespace Relativty {
         double r2;
         double theta;
 
-        rr = sqrt((fU - 0.5f) * (fU - 0.5f) + (fV - 0.5f) * (fV - 0.5f));
+        rr = sqrt((fU - 0.5F) * (fU - 0.5F) + (fV - 0.5F) * (fV - 0.5F));
         r2 = rr * (1 + m_fDistortionK1 * (rr * rr) +
                    m_fDistortionK2 * (rr * rr * rr * rr));
-        theta = atan2(fU - 0.5f, fV - 0.5f);
+        theta = atan2(fU - 0.5F, fV - 0.5F);
         hX = float(sin(theta) * r2) * m_fZoomWidth;
         hY = float(cos(theta) * r2) * m_fZoomHeight;
 
-        coordinates.rfBlue[0] = hX + 0.5f;
-        coordinates.rfBlue[1] = hY + 0.5f;
-        coordinates.rfGreen[0] = hX + 0.5f;
-        coordinates.rfGreen[1] = hY + 0.5f;
-        coordinates.rfRed[0] = hX + 0.5f;
-        coordinates.rfRed[1] = hY + 0.5f;
+        coordinates.rfBlue[0] = hX + 0.5F;
+        coordinates.rfBlue[1] = hY + 0.5F;
+        coordinates.rfGreen[0] = hX + 0.5F;
+        coordinates.rfGreen[1] = hY + 0.5F;
+        coordinates.rfRed[0] = hX + 0.5F;
+        coordinates.rfRed[1] = hY + 0.5F;
       } else {
         coordinates.rfBlue[0] = fU;
         coordinates.rfBlue[1] = fV;

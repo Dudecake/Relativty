@@ -4,7 +4,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(driver_Relativty)
 
-option(USE_CLANG_TIDY "Checks the code with clang-tidy")
+option(USE_CLANG_TIDY "Checks the code with clang-tidy" OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

@@ -22,6 +22,7 @@
 namespace Relativty {
 	class ServerDriver : public vr::IServerTrackedDeviceProvider {
 	public:
+		virtual ~ServerDriver() = default;
 		virtual vr::EVRInitError Init(vr::IVRDriverContext *DriverContext) override;
 		virtual void Cleanup() override;
 		virtual const char *const *GetInterfaceVersions() override;

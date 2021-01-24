@@ -33,7 +33,7 @@ using SOCKET = int;
 namespace Relativty {
 	class HMDDriver : public RelativtyDevice<false> {
 	public:
-		HMDDriver(const std::string myserial);
+		HMDDriver(const std::string &myserial);
 
 		void frameUpdate();
 		inline void setProperties();
@@ -61,7 +61,7 @@ namespace Relativty {
 		std::atomic<bool> retrieve_quaternion_isOn = false;
 		std::atomic<bool> new_quaternion_available = false;
 
-		std::atomic<float> qconj[4] = {1, 0, 0, 0};
+		float qconj[4] = {1, 0, 0, 0};
 		void calibrate_quaternion();
 
 		std::thread retrieve_quaternion_thread_worker;
